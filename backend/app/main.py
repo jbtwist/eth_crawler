@@ -2,7 +2,7 @@ import os
 from typing import Optional
 from fastapi import FastAPI
 
-from backend.app.utils import AlchemyWeb3Provider, get_transactions
+from app.utils import AlchemyWeb3Provider, get_transactions
 from .tokens import ERC20_ABI, ERC20_TOKENS
 from dotenv import load_dotenv
 

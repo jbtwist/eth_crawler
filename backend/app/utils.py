@@ -1,6 +1,6 @@
 from typing import Optional
 
-from backend.app.alchemy_payloads import AssetCategory, AssetTransferParams
+from app.alchemy_payloads import AssetCategory, AssetTransferParams
 
 import os
 from web3 import Web3
