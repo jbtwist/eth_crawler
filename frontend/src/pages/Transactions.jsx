@@ -38,6 +38,7 @@ function Transactions() {
     },
     enabled: !!address, 
     staleTime: 60000, 
+    retry: false, // Do not retry on failure, there's a button for that
   });
 
   const transactions = data || [];
