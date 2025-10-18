@@ -8,10 +8,11 @@ function Home() {
   const [untilBlock, setUntilBlock] = useState('latest');
 
   const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
+  const isValidUntilBlock = untilBlock === 'latest' || /^\d+$/.test(untilBlock);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!isValidAddress) return;
+    if (!isValidAddress || !isValidUntilBlock) return;
 
     navigate({
       to: '/transactions',
@@ -43,7 +44,7 @@ function Home() {
               placeholder="0x..."
               className={`w-full px-4 py-2 rounded-lg bg-gray-700 text-white border-2 transition-colors
                 ${address === '' ? 'border-gray-600' : 
-                  isValidAddress ? 'border-green-500' : 'border-red-500'}`}
+                  isValidAddress ? 'border-gray-600' : 'border-red-500'}`}
             />
             <p className="mt-1 text-sm text-gray-400">
               Enter a valid Ethereum address (42 characters starting with 0x)
@@ -66,7 +67,6 @@ function Home() {
                     onChange={(e) => setFromBlock(e.target.value)}
                     className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:border-blue-500 transition-colors"
                   />
-                  <p className="mt-1 text-sm text-gray-400">Default: 0</p>
                 </div>
 
                 {/* Until Block */}
@@ -79,15 +79,26 @@ function Home() {
                     type="text"
                     value={untilBlock}
                     onChange={(e) => setUntilBlock(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:border-blue-500 transition-colors"
+                    placeholder="latest or block number"
+                    className={`w-full px-4 py-2 rounded-lg bg-gray-700 text-white border-2 transition-colors
+                      ${isValidUntilBlock ? 'border-gray-600 focus:border-blue-500' : 'border-red-500'}`}
                   />
-                  <p className="mt-1 text-sm text-gray-400">Default: "latest"</p>
+                  {!isValidUntilBlock && (
+                    <p className="mt-1 text-sm text-red-400">
+                      Must be "latest" or a valid block number
+                    </p>
+                  )}
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                disabled={!isValidAddress || !isValidUntilBlock}
+                className={`w-full font-semibold py-3 px-6 rounded-lg transition-colors ${
+                  !isValidAddress || !isValidUntilBlock
+                    ? 'bg-gray-600 text-gray-400'
+                    : 'bg-blue-600 text-white'
+                }`}
               >
                 Search Transactions
               </button>
