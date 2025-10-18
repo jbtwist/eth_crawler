@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { Link, useSearch } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
 import TransactionsTable from '../components/TransactionsTable';
 
 /**
@@ -12,45 +12,35 @@ import TransactionsTable from '../components/TransactionsTable';
  */
 function Transactions() {
   const { address, from, until } = useSearch({ from: '/transactions' });
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const fromBlock = from || '0';
   const untilBlock = until || 'latest';
 
-  // Function to fetch transactions from the backend API
-  const fetchTransactions = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // TODO: Llamada a tu API backend
+  // Fetch transactions using React Query
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useQuery({
+    queryKey: ['transactions', address, fromBlock, untilBlock],
+    queryFn: async () => {
       const response = await fetch(
-        `http://localhost:8000/get_transactions/${address}/${fromBlock}?to_block=${untilBlock}`
+        `http://localhost:8000/get_transactions/${address}/?from_block=${fromBlock}&to_block=${untilBlock}`
       );
       
       if (!response.ok) {
         throw new Error('Failed to fetch transactions');
       }
       
-      const data = await response.json();
-      setTransactions(data.transfers || []);
-    } catch (err) {
-      setError(err.message);
-      console.error('Error fetching transactions:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const result = await response.json();
+      return result.transfers || [];
+    },
+    enabled: !!address, 
+    staleTime: 60000, 
+  });
 
-  /** Fetch transactions when component mounts or when parameters change 
-   *  This could be a hook in a separated file, but to keep the application simple, I'll leave it here.
-  */
-  useEffect(() => {
-    if (!address) return;
-    fetchTransactions();
-  }, [address, fromBlock, untilBlock]);
+  const transactions = data || [];
 
   return (
     // Back button and header
@@ -86,7 +76,7 @@ function Transactions() {
           </div>
         )}
         {/* Loading spinner */}
-        {loading && (
+        {isLoading && (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             <p className="text-gray-400 mt-4">Loading transactions...</p>
@@ -96,9 +86,9 @@ function Transactions() {
         {error && (
           <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-6">
             <p className="font-medium">Error loading transactions</p>
-            <p className="text-sm mb-3">{error}</p>
+            <p className="text-sm mb-3">{error.message}</p>
             <button
-              onClick={fetchTransactions}
+              onClick={() => refetch()}
               className="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
             >
               Retry
@@ -107,14 +97,14 @@ function Transactions() {
         )}
 
         {/* No transactions found message */}
-        {!loading && !error && transactions.length === 0 && address && (
+        {!isLoading && !error && transactions.length === 0 && address && (
           <div className="text-center py-12 text-gray-400">
             <p className="text-lg">No transactions found for this address</p>
           </div>
         )}
 
         {/* Transactions table */}
-        {!loading && !error && transactions.length > 0 && (
+        {!isLoading && !error && transactions.length > 0 && (
           <>
             <div className="mb-4 text-gray-400">
               Found {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
