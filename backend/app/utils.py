@@ -1,9 +1,12 @@
+import json
 import os
+import hashlib
 
 from dotenv import load_dotenv
 from web3 import Web3
 
 from app.alchemy_payloads import AssetCategory, AssetTransferParams
+from app import cache
 
 load_dotenv()
 
@@ -93,31 +96,37 @@ def get_out_transactions(
 
 def get_transactions(
         w3: Web3, 
-        from_address: str, 
-        to_address: str,
-        from_block: str, 
-        to_block: str, 
-        order: str, 
-        maxCount: str, 
-        withMetadata: bool, 
-        pageKey: str | None = None
+        query: AssetTransferParams
     ):
+    cache_instance = cache.get_cache()
+    cache_key = _generate_cache_key(query)
+    cached_result = cache_instance.get(cache_key)
+    if cached_result is not None:
+        return cached_result
+    
     # TODO: Use order, maxCount, withMetadata, pageKey in the query
-    if from_address == empty_address and to_address != empty_address:
+    if query.fromAddress == empty_address and query.toAddress != empty_address:
         transactions = get_in_transactions(
             w3, 
-            to_address, 
-            from_block, 
-            to_block
+            query.toAddress, 
+            query.fromBlock, 
+            query.toBlock
         )
-    elif to_address == empty_address and from_address != empty_address:
+    elif query.toAddress == empty_address and query.fromAddress != empty_address:
         transactions = get_out_transactions(
-            w3, 
-            from_address, 
-            from_block, 
-            to_block
+            w3,
+            query.fromAddress,
+            query.fromBlock,
+            query.toBlock
         )
     else:
         transactions = []
-
+    cache_instance.set(cache_key, transactions)
     return transactions
+
+def _generate_cache_key(params: AssetTransferParams) -> str:
+    params_dict = params.model_dump(exclude_unset=True)
+    params_str = json.dumps(params_dict, sort_keys=True)
+    hash_key = hashlib.sha256(params_str.encode()).hexdigest()
+    return f"alchemy:transfers:{hash_key}"
+

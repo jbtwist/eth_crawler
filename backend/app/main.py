@@ -12,7 +12,7 @@ load_dotenv()
 app = FastAPI()
 w3 = AlchemyWeb3Provider().w3
 
-origin = os.getenv("FRONTEND", "")
+origin = os.getenv("FRONTEND_URL", "")
 methods = os.getenv("ALLOWED_METHODS", "").split(",")
 headers = os.getenv("ALLOWED_HEADERS", "").split(",")
 app.add_middleware(
@@ -27,12 +27,6 @@ app.add_middleware(
 def get_table(query: AssetTransferParams):
     records = get_transactions(
         w3, 
-        query.fromAddress,
-        query.toAddress,
-        query.fromBlock, 
-        query.toBlock, 
-        query.order, 
-        query.maxCount, 
-        query.withMetadata        
+        query    
     )
     return records
