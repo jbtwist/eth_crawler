@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,7 +8,9 @@ import {
 // TODO: Add sorting, pagination and filtering features
 // TODO: Add horizontal and vertical scroll bars
 
-function TransactionsTable({ data = [], direction = 'out' }) {
+function TransactionsTable({ data = [], direction = 'out', onDirectionChange }) {
+  const [showDirectionMenu, setShowDirectionMenu] = useState(false);
+  
   const columns = useMemo(
     () => [
       {
@@ -47,17 +49,70 @@ function TransactionsTable({ data = [], direction = 'out' }) {
       },
       {
         accessorKey: 'direction',
-        header: 'In/Out',
-        cell: () => {         
+        header: () => (
+          <div className="relative">
+            <button
+              onClick={() => setShowDirectionMenu(!showDirectionMenu)}
+              className="inline-flex items-center gap-1 hover:text-blue-200 transition-colors"
+            >
+              In/Out
+              <svg 
+                className="w-4 h-4" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {showDirectionMenu && (
+              <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 p-3 z-10 min-w-[150px]">
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <input
+                      type="radio"
+                      name="direction"
+                      value="in"
+                      checked={direction === 'in'}
+                      onChange={() => {
+                        onDirectionChange?.('in');
+                        setShowDirectionMenu(false);
+                      }}
+                      className="w-4 h-4 text-green-600 focus:ring-green-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">In</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <input
+                      type="radio"
+                      name="direction"
+                      value="out"
+                      checked={direction === 'out'}
+                      onChange={() => {
+                        onDirectionChange?.('out');
+                        setShowDirectionMenu(false);
+                      }}
+                      className="w-4 h-4 text-red-600 focus:ring-red-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Out</span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+        ),
+        cell: () => {
+          const currentDirection = direction || 'out';
           return (
             <span
               className={`px-2 py-1 rounded text-sm font-medium ${
-                direction === 'in'
+                currentDirection === 'in'
                   ? 'bg-green-100 text-green-800'
                   : 'bg-red-100 text-red-800'
               }`}
             >
-              {direction === 'in' ? 'In' : 'Out'}
+              {currentDirection === 'in' ? 'In' : 'Out'}
             </span>
           );
         },
@@ -76,7 +131,7 @@ function TransactionsTable({ data = [], direction = 'out' }) {
         cell: (info) => info.getValue() || 'ETH',
       },
     ],
-    []
+    [direction, showDirectionMenu, onDirectionChange]
   );
 
   const table = useReactTable({

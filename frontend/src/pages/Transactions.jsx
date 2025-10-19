@@ -1,5 +1,6 @@
 import { Link, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import TransactionsTable from '../components/TransactionsTable';
 import { getDefaultTransactionPayload } from '../utils/BackendPayloads';
 import { BASE_URL, ENDPOINTS } from '../constants/api';
@@ -15,6 +16,7 @@ import { BASE_URL, ENDPOINTS } from '../constants/api';
  */
 function Transactions() {
   const { address, from, until } = useSearch({ from: '/transactions' });
+  const [direction, setDirection] = useState('out');
 
   const fromBlock = from || '0';
   const untilBlock = until || 'latest';
@@ -25,13 +27,13 @@ function Transactions() {
     error, 
     refetch 
   } = useQuery({
-    queryKey: ['transactions', address, fromBlock, untilBlock],
+    queryKey: ['transactions', address, fromBlock, untilBlock, direction],
     queryFn: async () => {
       const url = new URL(`${ENDPOINTS.TRANSACTIONS}/${address}`, BASE_URL);
       const response = await fetch(url.href, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(getDefaultTransactionPayload(address, fromBlock, untilBlock))
+        body: JSON.stringify(getDefaultTransactionPayload(address, fromBlock, untilBlock, direction))
       });
       
       if (!response.ok) {
@@ -47,7 +49,6 @@ function Transactions() {
   });
 
   const transactions = data?.transfers || [];
-  const direction = data?.direction || 'out';
 
   return (
     // Back button and header
@@ -118,7 +119,11 @@ function Transactions() {
             <div className="mb-4 text-gray-400">
               Found {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
             </div>
-            <TransactionsTable data={transactions} direction={direction} />
+            <TransactionsTable 
+              data={transactions} 
+              direction={direction}
+              onDirectionChange={setDirection}
+            />
           </>
         )}
       </div>
