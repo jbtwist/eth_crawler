@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class ABIType(str, Enum):
     FUNCTION = "function"
     ADDRESS = "address"

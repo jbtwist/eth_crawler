@@ -1,6 +1,6 @@
-from pydantic import BaseModel
-from typing import List, Optional
 from enum import Enum
+
+from pydantic import BaseModel
 
 
 class AssetCategory(str, Enum):
@@ -22,12 +22,12 @@ class AssetTransferParams(BaseModel):
     withMetadata: bool = False
     maxCount: str = "0x3e8"
 
-    category: List[AssetCategory]
+    category: list[AssetCategory]
 
 
 class AlchemyGetAssetTransfersRequest(BaseModel):
     id: int = 1
     jsonrpc: str = "2.0"
     method: str = "alchemy_getAssetTransfers"
-    params: List[AssetTransferParams]
+    params: list[AssetTransferParams]
 

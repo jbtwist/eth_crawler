@@ -1,14 +1,13 @@
-from typing import Optional
+import os
+
+from dotenv import load_dotenv
+from web3 import Web3
 
 from app.alchemy_payloads import AssetCategory, AssetTransferParams
 
-import os
-from web3 import Web3
-from dotenv import load_dotenv
-
 load_dotenv()
 
-empty_address = os.getenv("EMPTY_ADDRESS", "0x0000000000000000000000000000000000000000")
+empty_address = "0x0000000000000000000000000000000000000000"
 
 class AlchemyWeb3Provider:
     _instance = None
@@ -16,7 +15,7 @@ class AlchemyWeb3Provider:
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(AlchemyWeb3Provider, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
             ALCHEMY_API_KEY = os.getenv("ALCHEMY_API_KEY")
             ALCHEMY_URL = os.getenv(
                 "ALCHEMY_URL",
@@ -34,7 +33,12 @@ class AlchemyWeb3Provider:
 def get_web3() -> Web3:
     return AlchemyWeb3Provider().w3
 
-def get_in_transactions(w3: Web3, address: str, from_block: str, to_block: str):
+def get_in_transactions(
+        w3: Web3, 
+        address: str, 
+        from_block: str, 
+        to_block: str
+    ):
     transfer_params = AssetTransferParams(
         fromBlock=from_block,
         toBlock=to_block,
@@ -59,7 +63,12 @@ def get_in_transactions(w3: Web3, address: str, from_block: str, to_block: str):
 
     return response.get('result', [])
 
-def get_out_transactions(w3: Web3, address: str, from_block: str, to_block: str):
+def get_out_transactions(
+        w3: Web3, 
+        address: str, 
+        from_block: str, 
+        to_block: str
+    ):
     transfer_params = AssetTransferParams(
         fromBlock=from_block,
         toBlock=to_block,
@@ -91,13 +100,23 @@ def get_transactions(
         order: str, 
         maxCount: str, 
         withMetadata: bool, 
-        pageKey: Optional[str] = None
+        pageKey: str | None = None
     ):
     # TODO: Use order, maxCount, withMetadata, pageKey in the query
     if from_address == empty_address and to_address != empty_address:
-        transactions = get_in_transactions(w3, to_address, from_block, to_block)
+        transactions = get_in_transactions(
+            w3, 
+            to_address, 
+            from_block, 
+            to_block
+        )
     elif to_address == empty_address and from_address != empty_address:
-        transactions = get_out_transactions(w3, from_address, from_block, to_block)
+        transactions = get_out_transactions(
+            w3, 
+            from_address, 
+            from_block, 
+            to_block
+        )
     else:
         transactions = []
 

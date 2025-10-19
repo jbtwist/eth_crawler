@@ -1,12 +1,11 @@
 import os
-from typing import Optional
-from fastapi import FastAPI
 
-from app.utils import AlchemyWeb3Provider, get_transactions
-from app.alchemy_payloads import AssetTransferParams
-from app.tokens import ERC20_ABI, ERC20_TOKENS
 from dotenv import load_dotenv
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.alchemy_payloads import AssetTransferParams
+from app.utils import AlchemyWeb3Provider, get_transactions
 
 load_dotenv()
 

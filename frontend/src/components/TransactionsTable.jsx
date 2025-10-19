@@ -48,7 +48,7 @@ function TransactionsTable({ data = [], direction = 'out' }) {
       {
         accessorKey: 'direction',
         header: 'In/Out',
-        cell: (info) => {         
+        cell: () => {         
           return (
             <span
               className={`px-2 py-1 rounded text-sm font-medium ${
