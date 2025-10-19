@@ -5,7 +5,10 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 
-function TransactionsTable({ data = [] }) {
+// TODO: Add sorting, pagination and filtering features
+// TODO: Add horizontal and vertical scroll bars
+
+function TransactionsTable({ data = [], direction = 'out' }) {
   const columns = useMemo(
     () => [
       {
@@ -45,17 +48,16 @@ function TransactionsTable({ data = [] }) {
       {
         accessorKey: 'direction',
         header: 'In/Out',
-        cell: (info) => {
-          const direction = info.getValue();
+        cell: (info) => {         
           return (
             <span
               className={`px-2 py-1 rounded text-sm font-medium ${
-                direction === 'incoming'
+                direction === 'in'
                   ? 'bg-green-100 text-green-800'
                   : 'bg-red-100 text-red-800'
               }`}
             >
-              {direction === 'incoming' ? 'In' : 'Out'}
+              {direction === 'in' ? 'In' : 'Out'}
             </span>
           );
         },

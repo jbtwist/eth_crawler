@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+empty_address = os.getenv("EMPTY_ADDRESS", "0x0000000000000000000000000000000000000000")
+
 class AlchemyWeb3Provider:
     _instance = None
     _w3 = None
@@ -51,7 +53,11 @@ def get_in_transactions(w3: Web3, address: str, from_block: str, to_block: str):
         "alchemy_getAssetTransfers",
         [transfer_params.model_dump(exclude_unset=True)]
     )
-    return response.get('result', {}).get('transfers', [])
+
+    if response.get('result'):
+        response['result']['direction'] = 'in'
+
+    return response.get('result', [])
 
 def get_out_transactions(w3: Web3, address: str, from_block: str, to_block: str):
     transfer_params = AssetTransferParams(
@@ -72,7 +78,27 @@ def get_out_transactions(w3: Web3, address: str, from_block: str, to_block: str)
         "alchemy_getAssetTransfers",
         [transfer_params.model_dump(exclude_unset=True)]
     )
-    return response.get('result', {}).get('transfers', [])
+    if response.get('result'):
+        response['result']['direction'] = 'out'
+    return response.get('result', [])
 
-def get_transactions(w3: Web3, address: str, from_block: str, to_block: str, dir: str, maxCount: int, pageKey: Optional[str] = None):
-    pass
+def get_transactions(
+        w3: Web3, 
+        from_address: str, 
+        to_address: str,
+        from_block: str, 
+        to_block: str, 
+        order: str, 
+        maxCount: str, 
+        withMetadata: bool, 
+        pageKey: Optional[str] = None
+    ):
+    # TODO: Use order, maxCount, withMetadata, pageKey in the query
+    if from_address == empty_address and to_address != empty_address:
+        transactions = get_in_transactions(w3, to_address, from_block, to_block)
+    elif to_address == empty_address and from_address != empty_address:
+        transactions = get_out_transactions(w3, from_address, from_block, to_block)
+    else:
+        transactions = []
+
+    return transactions

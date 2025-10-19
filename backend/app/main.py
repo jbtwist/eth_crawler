@@ -3,7 +3,8 @@ from typing import Optional
 from fastapi import FastAPI
 
 from app.utils import AlchemyWeb3Provider, get_transactions
-from .tokens import ERC20_ABI, ERC20_TOKENS
+from app.alchemy_payloads import AssetTransferParams
+from app.tokens import ERC20_ABI, ERC20_TOKENS
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,6 +24,16 @@ app.add_middleware(
     allow_headers=headers,
 )
 
-@app.get("/get_transactions/{address}")
-def get_table(address: str, from_block: str, to_block: str, dir: str, maxCount: int, pageKey: Optional[str] = None):
-    records = get_transactions(w3, address, from_block, to_block, dir, maxCount, pageKey)
+@app.post("/get_transactions/{address}")
+def get_table(query: AssetTransferParams):
+    records = get_transactions(
+        w3, 
+        query.fromAddress,
+        query.toAddress,
+        query.fromBlock, 
+        query.toBlock, 
+        query.order, 
+        query.maxCount, 
+        query.withMetadata        
+    )
+    return records

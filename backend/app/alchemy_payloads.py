@@ -12,15 +12,15 @@ class AssetCategory(str, Enum):
 
 
 class AssetTransferParams(BaseModel):
-    fromBlock: Optional[str] = "0x0"
-    toBlock: Optional[str] = "latest"
-    fromAddress: Optional[str] = "0x0000000000000000000000000000000000000000"
-    toAddress: Optional[str] = "0x0000000000000000000000000000000000000000"
-    excludeZeroValue: Optional[bool] = True
+    fromBlock: str = "0x0"
+    toBlock: str = "latest"
+    fromAddress: str = "0x0000000000000000000000000000000000000000"
+    toAddress: str = "0x0000000000000000000000000000000000000000"
+    excludeZeroValue: bool = True
 
-    order: Optional[str] = "desc"
-    withMetadata: Optional[bool] = False
-    maxCount: Optional[str] = "0x3e8"
+    order: str = "desc"
+    withMetadata: bool = False
+    maxCount: str = "0x3e8"
 
     category: List[AssetCategory]
 
@@ -30,3 +30,4 @@ class AlchemyGetAssetTransfersRequest(BaseModel):
     jsonrpc: str = "2.0"
     method: str = "alchemy_getAssetTransfers"
     params: List[AssetTransferParams]
+

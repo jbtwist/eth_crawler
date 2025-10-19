@@ -1,6 +1,7 @@
 import { Link, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import TransactionsTable from '../components/TransactionsTable';
+import { getDefaultTransactionPayload } from '../utils/BackendPayloads';
 
 /**
  * Transactions Page
@@ -16,7 +17,6 @@ function Transactions() {
   const fromBlock = from || '0';
   const untilBlock = until || 'latest';
 
-  // Fetch transactions using React Query
   const { 
     data, 
     isLoading, 
@@ -25,32 +25,35 @@ function Transactions() {
   } = useQuery({
     queryKey: ['transactions', address, fromBlock, untilBlock],
     queryFn: async () => {
-      const response = await fetch(
-        `http://localhost:8000/get_transactions/${address}/?from_block=${fromBlock}&to_block=${untilBlock}`
-      );
+      const response = await fetch(`http://localhost:8000/get_transactions/${address}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(getDefaultTransactionPayload(address, fromBlock, untilBlock))
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch transactions');
       }
       
       const result = await response.json();
-      return result.transfers || [];
+      return result || [];
     },
     enabled: !!address, 
     staleTime: 60000, 
-    retry: false, // Do not retry on failure, there's a button for that
+    retry: false,
   });
 
-  const transactions = data || [];
+  const transactions = data?.transfers || [];
+  const direction = data?.direction || 'out';
 
   return (
     // Back button and header
-    <div className="min-h-screen bg-gray-700 p-8">
+    <div className="w-full min-h-screen bg-gray-700 px-4 py-8 md:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <Link 
             to="/" 
-            className="text-blue-400 hover:text-blue-300 flex items-center gap-2"
+            className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-2"
           >
             ← Back to search
           </Link>
@@ -76,14 +79,16 @@ function Transactions() {
             </div>
           </div>
         )}
-        {/* Loading spinner */}
+
+        {/* Loading Spinner */}
         {isLoading && (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             <p className="text-gray-400 mt-4">Loading transactions...</p>
           </div>
         )}
-        {/* Error message with retry button */}
+
+        {/* Error Message with retry button */}
         {error && (
           <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-6">
             <p className="font-medium">Error loading transactions</p>
@@ -104,13 +109,13 @@ function Transactions() {
           </div>
         )}
 
-        {/* Transactions table */}
+        {/* Transactions Table */}
         {!isLoading && !error && transactions.length > 0 && (
           <>
             <div className="mb-4 text-gray-400">
               Found {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
             </div>
-            <TransactionsTable data={transactions} />
+            <TransactionsTable data={transactions} direction={direction} />
           </>
         )}
       </div>
