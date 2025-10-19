@@ -20,9 +20,10 @@ class AssetTransferParams(BaseModel):
 
     order: str = "desc"
     withMetadata: bool = False
-    maxCount: str = "0x3e8"
+    maxCount: str = "0x19"  # 25 en hexadecimal
 
     category: list[AssetCategory]
+    pageKey: str | None = None  # Para paginación
 
 
 class AlchemyGetAssetTransfersRequest(BaseModel):

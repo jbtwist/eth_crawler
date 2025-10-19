@@ -17,6 +17,8 @@ import { BASE_URL, ENDPOINTS } from '../constants/api';
 function Transactions() {
   const { address, from, until } = useSearch({ from: '/transactions' });
   const [direction, setDirection] = useState('out');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageKeys, setPageKeys] = useState([null]); // Array de pageKeys, [0] = null (primera página)
 
   const fromBlock = from || '0';
   const untilBlock = until || 'latest';
@@ -27,13 +29,14 @@ function Transactions() {
     error, 
     refetch 
   } = useQuery({
-    queryKey: ['transactions', address, fromBlock, untilBlock, direction],
+    queryKey: ['transactions', address, fromBlock, untilBlock, direction, currentPage],
     queryFn: async () => {
       const url = new URL(`${ENDPOINTS.TRANSACTIONS}/${address}`, BASE_URL);
+      const pageKey = pageKeys[currentPage]; // Obtener pageKey para la página actual
       const response = await fetch(url.href, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(getDefaultTransactionPayload(address, fromBlock, untilBlock, direction))
+        body: JSON.stringify(getDefaultTransactionPayload(address, fromBlock, untilBlock, direction, pageKey))
       });
       
       if (!response.ok) {
@@ -41,6 +44,12 @@ function Transactions() {
       }
       
       const result = await response.json();
+      
+      // Si hay pageKey en la respuesta y no lo tenemos guardado, añadirlo
+      if (result.pageKey && !pageKeys[currentPage + 1]) {
+        setPageKeys(prev => [...prev, result.pageKey]);
+      }
+      
       return result || [];
     },
     enabled: !!address, 
@@ -49,6 +58,25 @@ function Transactions() {
   });
 
   const transactions = data?.transfers || [];
+  const hasNextPage = !!data?.pageKey; // Hay siguiente página si Alchemy devuelve pageKey
+
+  const handleDirectionChange = (newDirection) => {
+    setDirection(newDirection);
+    setCurrentPage(0);
+    setPageKeys([null]); // Reset pageKeys al cambiar dirección
+  };
+
+  const handleNextPage = () => {
+    if (hasNextPage) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
 
   return (
     // Back button and header
@@ -117,13 +145,50 @@ function Transactions() {
         {!isLoading && !error && transactions.length > 0 && (
           <>
             <div className="mb-4 text-gray-400">
-              Found {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+              Showing {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} (Page {currentPage + 1})
             </div>
             <TransactionsTable 
               data={transactions} 
               direction={direction}
-              onDirectionChange={setDirection}
+              onDirectionChange={handleDirectionChange}
             />
+            
+            {/* Pagination Controls */}
+            <div className="mt-6 flex items-center justify-between bg-gray-800 px-6 py-4 rounded-lg">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 0 || isLoading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  currentPage === 0 || isLoading
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous
+              </button>
+              
+              <div className="text-white font-medium">
+                Page {currentPage + 1}
+              </div>
+              
+              <button
+                onClick={handleNextPage}
+                disabled={!hasNextPage || isLoading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  !hasNextPage || isLoading
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                Next
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </>
         )}
       </div>

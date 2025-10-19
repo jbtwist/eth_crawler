@@ -107,26 +107,44 @@ def get_transactions(
     
     # TODO: Use order, maxCount, withMetadata, pageKey in the query
     if query.fromAddress == empty_address and query.toAddress != empty_address:
-        transactions = get_in_transactions(
-            w3, 
-            query.toAddress, 
-            query.fromBlock, 
-            query.toBlock
-        )
+        direction = 'in'
+        transactions = _make_alchemy_request(w3, query, direction)
     elif query.toAddress == empty_address and query.fromAddress != empty_address:
-        transactions = get_out_transactions(
-            w3,
-            query.fromAddress,
-            query.fromBlock,
-            query.toBlock
-        )
+        direction = 'out'
+        transactions = _make_alchemy_request(w3, query, direction)
     else:
         transactions = {}
+    
     cache_instance.set(cache_key, transactions)
     return transactions
 
+def _make_alchemy_request(w3: Web3, query: AssetTransferParams, direction: str) -> dict:
+    """Helper para hacer la request a Alchemy con paginación"""
+    params_dict = query.model_dump(exclude_unset=True, mode='json')
+    
+    # Añadir categorías si no están presentes
+    if not params_dict.get('category'):
+        params_dict['category'] = ['external', 'internal', 'erc20', 'erc721', 'erc1155']
+    
+    # Eliminar direcciones 0x000... para que Alchemy funcione correctamente
+    if params_dict.get('fromAddress') == empty_address:
+        params_dict.pop('fromAddress', None)
+    if params_dict.get('toAddress') == empty_address:
+        params_dict.pop('toAddress', None)
+    
+    response = w3.provider.make_request(
+        "alchemy_getAssetTransfers",
+        [params_dict]
+    )
+    
+    result = response.get('result', {})
+    if result:
+        result['direction'] = direction
+    
+    return result
+
 def _generate_cache_key(params: AssetTransferParams) -> str:
-    params_dict = params.model_dump(exclude_unset=True)
+    params_dict = params.model_dump(exclude_unset=True, mode='json')
     params_str = json.dumps(params_dict, sort_keys=True)
     hash_key = hashlib.sha256(params_str.encode()).hexdigest()
     return f"alchemy:transactions:{hash_key}"

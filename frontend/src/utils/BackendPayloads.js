@@ -1,4 +1,4 @@
-function getDefaultTransactionPayload(address, fromBlock, untilBlock, direction = 'out') {
+function getDefaultTransactionPayload(address, fromBlock, untilBlock, direction = 'out', pageKey = null) {
   // Convertir bloques a formato hexadecimal si no es 'latest'
   const formatBlock = (block) => {
     if (block === 'latest') return 'latest';
@@ -6,7 +6,7 @@ function getDefaultTransactionPayload(address, fromBlock, untilBlock, direction 
     return '0x' + blockNum.toString(16);
   };
 
-  return {
+  const payload = {
     fromBlock: formatBlock(fromBlock),
     toBlock: formatBlock(untilBlock),
     fromAddress: direction === 'out' ? address : "0x0000000000000000000000000000000000000000",
@@ -14,8 +14,15 @@ function getDefaultTransactionPayload(address, fromBlock, untilBlock, direction 
     excludeZeroValue: false,
     order: "desc",
     withMetadata: false,
-    maxCount: "0x3e8",
+    maxCount: "0x19", // 25 en hexadecimal
     category: []
   };
+  
+  // Solo añadir pageKey si existe
+  if (pageKey) {
+    payload.pageKey = pageKey;
+  }
+  
+  return payload;
 }
 export { getDefaultTransactionPayload };
