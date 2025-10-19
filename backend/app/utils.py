@@ -32,7 +32,6 @@ class AlchemyWeb3Provider:
     def w3(self) -> Web3:
         return self._w3
 
-
 def get_web3() -> Web3:
     return AlchemyWeb3Provider().w3
 
@@ -41,7 +40,7 @@ def get_in_transactions(
         address: str, 
         from_block: str, 
         to_block: str
-    ):
+    ) -> dict:
     transfer_params = AssetTransferParams(
         fromBlock=from_block,
         toBlock=to_block,
@@ -64,14 +63,14 @@ def get_in_transactions(
     if response.get('result'):
         response['result']['direction'] = 'in'
 
-    return response.get('result', [])
+    return response.get('result', {})
 
 def get_out_transactions(
         w3: Web3, 
         address: str, 
         from_block: str, 
         to_block: str
-    ):
+    ) -> dict:
     transfer_params = AssetTransferParams(
         fromBlock=from_block,
         toBlock=to_block,
@@ -92,12 +91,14 @@ def get_out_transactions(
     )
     if response.get('result'):
         response['result']['direction'] = 'out'
-    return response.get('result', [])
+    return response.get('result', {})
 
 def get_transactions(
         w3: Web3, 
         query: AssetTransferParams
-    ):
+    ) -> dict:
+    # If creating a robust search engine, I would implement more complex 
+    # caching strategies, for this MVP I think this is enough
     cache_instance = cache.get_cache()
     cache_key = _generate_cache_key(query)
     cached_result = cache_instance.get(cache_key)
@@ -120,7 +121,7 @@ def get_transactions(
             query.toBlock
         )
     else:
-        transactions = []
+        transactions = {}
     cache_instance.set(cache_key, transactions)
     return transactions
 
@@ -128,5 +129,5 @@ def _generate_cache_key(params: AssetTransferParams) -> str:
     params_dict = params.model_dump(exclude_unset=True)
     params_str = json.dumps(params_dict, sort_keys=True)
     hash_key = hashlib.sha256(params_str.encode()).hexdigest()
-    return f"alchemy:transfers:{hash_key}"
+    return f"alchemy:transactions:{hash_key}"
 
