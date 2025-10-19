@@ -32,7 +32,7 @@ function Transactions() {
     queryKey: ['transactions', address, fromBlock, untilBlock, direction, currentPage],
     queryFn: async () => {
       const url = new URL(`${ENDPOINTS.TRANSACTIONS}/${address}`, BASE_URL);
-      const pageKey = pageKeys[currentPage]; // Obtener pageKey para la página actual
+      const pageKey = pageKeys[currentPage]; 
       const response = await fetch(url.href, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,7 +45,6 @@ function Transactions() {
       
       const result = await response.json();
       
-      // Si hay pageKey en la respuesta y no lo tenemos guardado, añadirlo
       if (result.pageKey && !pageKeys[currentPage + 1]) {
         setPageKeys(prev => [...prev, result.pageKey]);
       }
@@ -58,12 +57,12 @@ function Transactions() {
   });
 
   const transactions = data?.transfers || [];
-  const hasNextPage = !!data?.pageKey; // Hay siguiente página si Alchemy devuelve pageKey
+  const hasNextPage = !!data?.pageKey; 
 
   const handleDirectionChange = (newDirection) => {
     setDirection(newDirection);
     setCurrentPage(0);
-    setPageKeys([null]); // Reset pageKeys al cambiar dirección
+    setPageKeys([null]);
   };
 
   const handleNextPage = () => {
@@ -164,16 +163,17 @@ function Transactions() {
                     : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
               >
+                {/* Icon for Previous Button */}
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
                 Previous
               </button>
-              
+              {/* Page Number Display */}
               <div className="text-white font-medium">
                 Page {currentPage + 1}
               </div>
-              
+              {/* Next Button */}
               <button
                 onClick={handleNextPage}
                 disabled={!hasNextPage || isLoading}

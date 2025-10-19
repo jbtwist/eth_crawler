@@ -16,12 +16,20 @@ function TransactionsTable({ data = [], direction = 'out', onDirectionChange }) 
       {
         accessorKey: 'blockNum',
         header: 'Block Number',
-        cell: (info) => info.getValue(),
+        cell: (info) => {
+          const blockNum = info.getValue();
+          // Convertir de hexadecimal a decimal
+          return blockNum ? parseInt(blockNum, 16).toLocaleString() : '-';
+        },
       },
       {
         accessorKey: 'uniqueId',
         header: 'Unique Id',
-        cell: (info) => info.getValue(),
+        cell: (info) => {
+          const uniqueId = info.getValue();
+          // Quitar el sufijo :external, :internal, etc.
+          return uniqueId ? uniqueId.split(':')[0] : '-';
+        },
       },
       {
         accessorKey: 'hash',

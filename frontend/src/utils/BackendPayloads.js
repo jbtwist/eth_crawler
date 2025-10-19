@@ -1,5 +1,4 @@
 function getDefaultTransactionPayload(address, fromBlock, untilBlock, direction = 'out', pageKey = null) {
-  // Convertir bloques a formato hexadecimal si no es 'latest'
   const formatBlock = (block) => {
     if (block === 'latest') return 'latest';
     const blockNum = parseInt(block, 10);
@@ -14,11 +13,10 @@ function getDefaultTransactionPayload(address, fromBlock, untilBlock, direction 
     excludeZeroValue: false,
     order: "desc",
     withMetadata: false,
-    maxCount: "0x19", // 25 en hexadecimal
+    maxCount: "0x19", // 25 in hex
     category: []
   };
   
-  // Solo añadir pageKey si existe
   if (pageKey) {
     payload.pageKey = pageKey;
   }

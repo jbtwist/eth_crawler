@@ -1,12 +1,12 @@
+import hashlib
 import json
 import os
-import hashlib
 
 from dotenv import load_dotenv
 from web3 import Web3
 
-from app.alchemy_payloads import AssetCategory, AssetTransferParams
 from app import cache
+from app.alchemy_payloads import AssetCategory, AssetTransferParams
 
 load_dotenv()
 
@@ -104,12 +104,13 @@ def get_transactions(
     cached_result = cache_instance.get(cache_key)
     if cached_result is not None:
         return cached_result
-    
-    # TODO: Use order, maxCount, withMetadata, pageKey in the query
-    if query.fromAddress == empty_address and query.toAddress != empty_address:
+
+    if (query.fromAddress == empty_address and 
+        query.toAddress != empty_address):
         direction = 'in'
         transactions = _make_alchemy_request(w3, query, direction)
-    elif query.toAddress == empty_address and query.fromAddress != empty_address:
+    elif (query.toAddress == empty_address and 
+          query.fromAddress != empty_address):
         direction = 'out'
         transactions = _make_alchemy_request(w3, query, direction)
     else:
@@ -118,15 +119,23 @@ def get_transactions(
     cache_instance.set(cache_key, transactions)
     return transactions
 
-def _make_alchemy_request(w3: Web3, query: AssetTransferParams, direction: str) -> dict:
-    """Helper para hacer la request a Alchemy con paginación"""
+def _make_alchemy_request(
+        w3: Web3, query: 
+        AssetTransferParams, 
+        direction: str
+    ) -> dict:
+    """Pagination helper function"""
     params_dict = query.model_dump(exclude_unset=True, mode='json')
     
-    # Añadir categorías si no están presentes
     if not params_dict.get('category'):
-        params_dict['category'] = ['external', 'internal', 'erc20', 'erc721', 'erc1155']
-    
-    # Eliminar direcciones 0x000... para que Alchemy funcione correctamente
+        params_dict['category'] = [            
+            AssetCategory.EXTERNAL.value,
+            AssetCategory.INTERNAL.value,
+            AssetCategory.ERC20.value,
+            AssetCategory.ERC721.value,
+            AssetCategory.ERC1155.value
+        ]
+
     if params_dict.get('fromAddress') == empty_address:
         params_dict.pop('fromAddress', None)
     if params_dict.get('toAddress') == empty_address:

@@ -1,6 +1,5 @@
 import json
 import os
-from typing import Optional
 
 import redis
 from dotenv import load_dotenv
@@ -16,7 +15,7 @@ class RedisCache:
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(RedisCache, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
             cls._client = redis.Redis(
                 host=os.getenv("REDIS_HOST", "localhost"),
                 port=int(os.getenv("REDIS_PORT", 6379)),
@@ -29,7 +28,7 @@ class RedisCache:
     def client(self) -> redis.Redis:
         return self._client
 
-    def get(self, key: str) -> Optional[dict]:
+    def get(self, key: str) -> dict | None:
         """
         Extracts a value from the cache
         
@@ -44,18 +43,18 @@ class RedisCache:
             if value:
                 return json.loads(value)
             return None
-        except Exception as e:
-            print(f"Error getting cache key {key}: {e}")
+        except Exception:
             return None
 
-    def set(self, key: str, value: dict, ttl: Optional[int] = None) -> bool:
+    def set(self, key: str, value: dict, ttl: int | None = None) -> bool:
         """
         Stores a value in the cache
         
         Args:
             key: Key of the value to store in cache
             value: Value to store (must be JSON serializable)
-            ttl: Time to live in seconds (uses REDIS_CACHE_TTL if not specified)
+            ttl: Time to live in seconds (uses REDIS_CACHE_TTL 
+                 if not specified)
             
         Returns:
             True if stored successfully, False otherwise
@@ -67,8 +66,7 @@ class RedisCache:
             serialized = json.dumps(value)
             self._client.setex(key, ttl, serialized)
             return True
-        except Exception as e:
-            print(f"Error setting cache key {key}: {e}")
+        except Exception:
             return False
 
     def delete(self, key: str) -> bool:
@@ -84,8 +82,7 @@ class RedisCache:
         try:
             self._client.delete(key)
             return True
-        except Exception as e:
-            print(f"Error deleting cache key {key}: {e}")
+        except Exception:
             return False
 
     def clear_all(self) -> bool:
@@ -98,8 +95,7 @@ class RedisCache:
         try:
             self._client.flushdb()
             return True
-        except Exception as e:
-            print(f"Error clearing cache: {e}")
+        except Exception:
             return False
 
 
