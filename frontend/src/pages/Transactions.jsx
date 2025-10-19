@@ -2,6 +2,8 @@ import { Link, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import TransactionsTable from '../components/TransactionsTable';
 import { getDefaultTransactionPayload } from '../utils/BackendPayloads';
+import { BASE_URL, ENDPOINTS } from '../constants/api';
+
 
 /**
  * Transactions Page
@@ -25,7 +27,8 @@ function Transactions() {
   } = useQuery({
     queryKey: ['transactions', address, fromBlock, untilBlock],
     queryFn: async () => {
-      const response = await fetch(`http://localhost:8000/get_transactions/${address}`, {
+      const url = new URL(`${ENDPOINTS.TRANSACTIONS}/${address}`, BASE_URL);
+      const response = await fetch(url.href, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(getDefaultTransactionPayload(address, fromBlock, untilBlock))

@@ -1,4 +1,4 @@
-function getDefaultTransactionPayload(address: string, fromBlock: string, untilBlock: string) {
+function getDefaultTransactionPayload(address, fromBlock, untilBlock) {
   return {
     from_block: fromBlock,
     to_block: untilBlock,
